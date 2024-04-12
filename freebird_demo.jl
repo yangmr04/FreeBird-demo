@@ -255,7 +255,8 @@ plot(ts, cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
 
 # ╔═╡ 6071da62-0458-4fa3-8059-f3d337aaced2
 md"""
-![LJ6]("LJ6.gif")
+## 
+![LJ6](https://github.com/yangmr04/FreeBird-demo/blob/main/LJ6.gif?raw=true)
 """
 
 # ╔═╡ 0bfc63b6-6dc3-4ca4-85a9-7f2028dcaeb1
@@ -340,7 +341,7 @@ md"""
 # ╠═7756264e-7e71-4d12-8a09-baeab1ee4077
 # ╠═1b7d86b4-9d84-44a6-852f-cceea593b2e9
 # ╠═39386f04-3539-4b1f-8dec-612b081ffa46
-# ╠═6071da62-0458-4fa3-8059-f3d337aaced2
+# ╟─6071da62-0458-4fa3-8059-f3d337aaced2
 # ╟─0bfc63b6-6dc3-4ca4-85a9-7f2028dcaeb1
 # ╠═6a11ff64-0ad8-4b57-a8db-06765238bfac
 # ╠═77f8c9fd-9634-4921-a3f9-c0aa5bc6520f
