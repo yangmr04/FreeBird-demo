@@ -135,7 +135,7 @@ First, let's generate some random initial configurations, with 6 hydrogen atoms 
 """
 
 # ╔═╡ 9e91b9d0-6f3c-4a12-8bab-9c8b6f28857e
-hydrogens = generate_initial_configs(10::Int64, 100.0::Float64, 6::Int64; particle_type=:H) 
+hydrogens = generate_initial_configs(5::Int64, 100.0::Float64, 6::Int64; particle_type=:H) 
 
 # ╔═╡ de82ef79-26da-4863-bbee-82e65d01be80
 md"""
@@ -173,32 +173,6 @@ md"""
 Now we have everything needed for a nested sampling calculation!
 """
 
-# ╔═╡ 1ac7e7a6-d71b-4c29-9cf4-29d249856f4d
-md"## Time to Monte Carlo!"
-
-# ╔═╡ 5bbb4d82-0ac8-431e-84cf-706624d67051
-md"""
-Before we run a nested sampling, let's see what kind of Monte Carlo moves we have.
-"""
-
-# ╔═╡ d94d2d93-55db-49d4-8d99-d4ded29f3519
-at = deepcopy(liveset.walkers[1])
-
-# ╔═╡ 1b90ba2e-e35e-44c7-9ebd-7ed8c44e67dd
-MC_random_walk!(1::Int64, at::FreeBird.AbstractWalkers.AtomWalker, lj::FreeBird.Potentials.LJParameters, 0.1::Float64, at.energy) 
-
-# ╔═╡ de763b35-5fc0-4e1a-bbe7-07b8f122aa2d
-md"""## NVE walk (Deomn walk)"""
-
-# ╔═╡ 6490f42e-926a-498f-9062-35041bb04159
-at_og = deepcopy(at)
-
-# ╔═╡ c3b4314b-a5a9-43a1-9ae9-622ae773191a
-MC_nve_walk!(10000, at_og, lj, 0.01)
-
-# ╔═╡ 954b11bf-b170-4919-821f-e32fc3658292
-at_og
-
 # ╔═╡ 30095fa5-cc4b-4260-892e-f5defa326a3c
 md"""
 ## Nested Sampling!
@@ -215,6 +189,11 @@ n_iters = 20_000
 
 # ╔═╡ 6999a230-82d1-480d-a0fc-a7bdada6fdb6
 save = SaveEveryN(n=100) # no saving until the last step
+
+# ╔═╡ 354c14c8-df26-460e-bb9b-c3945561d81d
+md"""
+## Run the code
+"""
 
 # ╔═╡ 68f4f490-f80a-4269-9000-e43ae269544a
 begin
@@ -269,15 +248,10 @@ u = [internal_energy(b, gi, ei) for b in beta]
 plot(ts, u, xlabel="Temperature (K)", ylabel="Internal energy")
 
 # ╔═╡ 1b7d86b4-9d84-44a6-852f-cceea593b2e9
-# ╠═╡ disabled = true
-#=╠═╡
 cvs = [cv(b, gi, ei, dof) for b in beta]
-  ╠═╡ =#
 
 # ╔═╡ 39386f04-3539-4b1f-8dec-612b081ffa46
-#=╠═╡
 plot(ts, cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
-  ╠═╡ =#
 
 # ╔═╡ 0bfc63b6-6dc3-4ca4-85a9-7f2028dcaeb1
 md"""
@@ -332,19 +306,12 @@ plot(surf_ts, surf_cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
 # ╟─ca3cd8bd-3057-4624-b834-35d4e76545b6
 # ╠═3ff30da5-b855-4b74-9d6f-81c7f5f610c4
 # ╟─9418bea4-cd5b-47eb-97fd-d3e03ced0a8c
-# ╟─1ac7e7a6-d71b-4c29-9cf4-29d249856f4d
-# ╟─5bbb4d82-0ac8-431e-84cf-706624d67051
-# ╠═d94d2d93-55db-49d4-8d99-d4ded29f3519
-# ╠═1b90ba2e-e35e-44c7-9ebd-7ed8c44e67dd
-# ╟─de763b35-5fc0-4e1a-bbe7-07b8f122aa2d
-# ╠═6490f42e-926a-498f-9062-35041bb04159
-# ╠═c3b4314b-a5a9-43a1-9ae9-622ae773191a
-# ╠═954b11bf-b170-4919-821f-e32fc3658292
 # ╟─30095fa5-cc4b-4260-892e-f5defa326a3c
 # ╠═eed6a262-f804-419d-ba96-9db596202508
 # ╠═8a2920e2-9058-4e29-8560-8a249530178f
 # ╠═f8d5538f-0621-4c11-875d-729af53123da
 # ╠═6999a230-82d1-480d-a0fc-a7bdada6fdb6
+# ╟─354c14c8-df26-460e-bb9b-c3945561d81d
 # ╠═68f4f490-f80a-4269-9000-e43ae269544a
 # ╠═1beb8de4-bf20-44d3-8ff8-19a5dcfa6f94
 # ╠═f2394846-280f-4c1e-9a82-5c78711452d7
