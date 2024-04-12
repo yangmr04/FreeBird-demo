@@ -124,9 +124,6 @@ end
 ```
 """
 
-# ╔═╡ 28ec3814-5eb4-42fe-94be-37f29ac7d5ee
-methods(LJParameters)
-
 # ╔═╡ 0d37c8c6-f858-4e58-bf41-aae0a6bee7ad
 md"""
 ## Now let's define some walkers
@@ -185,7 +182,7 @@ Before we run a nested sampling, let's see what kind of Monte Carlo moves we hav
 """
 
 # ╔═╡ d94d2d93-55db-49d4-8d99-d4ded29f3519
-at = deepcopy(walkers[1])
+at = deepcopy(liveset.walkers[1])
 
 # ╔═╡ 1b90ba2e-e35e-44c7-9ebd-7ed8c44e67dd
 MC_random_walk!(1::Int64, at::FreeBird.AbstractWalkers.AtomWalker, lj::FreeBird.Potentials.LJParameters, 0.1::Float64, at.energy) 
@@ -197,10 +194,10 @@ md"""## NVE walk (Deomn walk)"""
 at_og = deepcopy(at)
 
 # ╔═╡ c3b4314b-a5a9-43a1-9ae9-622ae773191a
-MC_nve_walk!(10000, at, lj, 0.01)
+MC_nve_walk!(10000, at_og, lj, 0.01)
 
 # ╔═╡ 954b11bf-b170-4919-821f-e32fc3658292
-at
+at_og
 
 # ╔═╡ 30095fa5-cc4b-4260-892e-f5defa326a3c
 md"""
@@ -221,6 +218,9 @@ save = SaveEveryN(n=100) # no saving until the last step
 
 # ╔═╡ 68f4f490-f80a-4269-9000-e43ae269544a
 begin
+	if isfile("output_df.csv")
+		run(`rm output_df.csv output.ls.extxyz output.traj.extxyz`) # delete previous output
+	end
 	new_walkers = AtomWalker.(generate_initial_configs(120::Int64, 100.0::Float64, 6::Int64))
 	new_ls = LJAtomWalkers(new_walkers, lj)
 	energies, live, _ = nested_sampling_loop!(new_ls, ns_params, n_iters, mc, save)
@@ -245,7 +245,7 @@ partition_function(0.1::Float64, gi::Vector{Float64}, energies.emax::Vector{Floa
 kb = 8.617333262e-5 # eV/K
 
 # ╔═╡ 601be34c-11fd-4693-9098-0eb1e4d8b0c1
-ts = collect(10:1:10000)
+ts = 10:10:10000 
 
 # ╔═╡ 4f2a5238-b644-445d-ac33-c521d402ed41
 beta = 1 ./(kb.*ts)
@@ -269,10 +269,41 @@ u = [internal_energy(b, gi, ei) for b in beta]
 plot(ts, u, xlabel="Temperature (K)", ylabel="Internal energy")
 
 # ╔═╡ 1b7d86b4-9d84-44a6-852f-cceea593b2e9
+# ╠═╡ disabled = true
+#=╠═╡
 cvs = [cv(b, gi, ei, dof) for b in beta]
+  ╠═╡ =#
 
 # ╔═╡ 39386f04-3539-4b1f-8dec-612b081ffa46
+#=╠═╡
 plot(ts, cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
+  ╠═╡ =#
+
+# ╔═╡ 0bfc63b6-6dc3-4ca4-85a9-7f2028dcaeb1
+md"""
+## How about surfaces?
+"""
+
+# ╔═╡ 6a11ff64-0ad8-4b57-a8db-06765238bfac
+surf_energies = read_output("08_surf.csv")
+
+# ╔═╡ 77f8c9fd-9634-4921-a3f9-c0aa5bc6520f
+surf_gi = gamma_factors(surf_energies.iter, 640)
+
+# ╔═╡ de6e92b6-d971-4567-b1bf-615f267bd5c8
+surf_ei = surf_energies.emax .- minimum(surf_energies.emax)
+
+# ╔═╡ 26a6ea9f-6d59-452f-a8b8-6cb5fd91b7e1
+surf_ts = 1:2500
+
+# ╔═╡ f2f8953e-15ba-4261-822f-61b048637880
+surf_beta = 1 ./(kb.*surf_ts)
+
+# ╔═╡ df5e0581-bbe3-4522-86e0-7e736a4c3d00
+surf_cvs = [cv(b, surf_gi, surf_ei, 3*8) for b in surf_beta]
+
+# ╔═╡ 27ff4b7e-a10f-4d2c-accf-cbcd4aa2b24e
+plot(surf_ts, surf_cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
 
 # ╔═╡ Cell order:
 # ╟─ad6b7485-5af8-4cd3-867a-dc3e53cf9cc0
@@ -290,7 +321,6 @@ plot(ts, cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
 # ╠═2216fc0e-d8c3-4cfa-a003-f54701fcea66
 # ╟─161a24f5-e5f1-4174-8236-ccb57d75063c
 # ╟─257840d3-1004-418b-b732-200bc65fb3a0
-# ╠═28ec3814-5eb4-42fe-94be-37f29ac7d5ee
 # ╟─0d37c8c6-f858-4e58-bf41-aae0a6bee7ad
 # ╟─c74d16b3-8424-4ba3-bb0c-d7434cabddcc
 # ╠═9e91b9d0-6f3c-4a12-8bab-9c8b6f28857e
@@ -332,3 +362,11 @@ plot(ts, cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
 # ╠═7756264e-7e71-4d12-8a09-baeab1ee4077
 # ╠═1b7d86b4-9d84-44a6-852f-cceea593b2e9
 # ╠═39386f04-3539-4b1f-8dec-612b081ffa46
+# ╟─0bfc63b6-6dc3-4ca4-85a9-7f2028dcaeb1
+# ╠═6a11ff64-0ad8-4b57-a8db-06765238bfac
+# ╠═77f8c9fd-9634-4921-a3f9-c0aa5bc6520f
+# ╠═de6e92b6-d971-4567-b1bf-615f267bd5c8
+# ╠═26a6ea9f-6d59-452f-a8b8-6cb5fd91b7e1
+# ╠═f2f8953e-15ba-4261-822f-61b048637880
+# ╠═df5e0581-bbe3-4522-86e0-7e736a4c3d00
+# ╠═27ff4b7e-a10f-4d2c-accf-cbcd4aa2b24e
