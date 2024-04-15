@@ -188,19 +188,21 @@ ns_params=NestedSamplingParameters(200::Int64, 0.1::Float64, 0.01::Float64, 1e-5
 n_iters = 20_000
 
 # ╔═╡ 6999a230-82d1-480d-a0fc-a7bdada6fdb6
-save = SaveEveryN(n=100) # no saving until the last step
+save = SaveEveryN(n=20_000) 
 
 # ╔═╡ 354c14c8-df26-460e-bb9b-c3945561d81d
 md"""
 ## Run the code
 """
 
+# ╔═╡ 966a5497-2b72-49bf-9b76-20279a795d22
+new_walkers = AtomWalker.(generate_initial_configs(120::Int64, 100.0::Float64, 6::Int64))
+
 # ╔═╡ 68f4f490-f80a-4269-9000-e43ae269544a
 begin
 	if isfile("output_df.csv")
 		run(`rm output_df.csv output.ls.extxyz output.traj.extxyz`) # delete previous output
 	end
-	new_walkers = AtomWalker.(generate_initial_configs(120::Int64, 100.0::Float64, 6::Int64))
 	new_ls = LJAtomWalkers(new_walkers, lj)
 	energies, live, _ = nested_sampling_loop!(new_ls, ns_params, n_iters, mc, save)
 end
@@ -209,13 +211,27 @@ end
 energies
 
 # ╔═╡ f2394846-280f-4c1e-9a82-5c78711452d7
-new_ls
+new_ls.walkers
 
 # ╔═╡ 48b0f871-293d-44e2-9ffa-12481f187237
 md"""## Analysis"""
 
+# ╔═╡ 3a0c16e9-6e1e-4497-afbe-772d15105d7d
+md"""
+Compute the $\Gamma$ factors:
+
+$\Gamma_i = \frac{1}{N+1} \left(\frac{N}{N+1}\right)^i$
+"""
+
 # ╔═╡ 34f93745-4823-4b50-9b1b-7de0df5d7ef3
 gi = gamma_factors(energies.iter::Vector{Int64}, 120::Int64) 
+
+# ╔═╡ 312afb4b-2b97-48df-8f59-215f10678c68
+md"""
+Partition function:
+
+$Z(\beta) = \sum_i \Gamma_i e^{-E_i \beta}$
+"""
 
 # ╔═╡ 0eed5c28-2152-4294-877a-008912486b98
 partition_function(0.1::Float64, gi::Vector{Float64}, energies.emax::Vector{Float64}) 
@@ -241,11 +257,26 @@ zs = [partition_function(b, gi, ei) for b in beta]
 # ╔═╡ 22169a82-0b5a-4012-8a85-64051e4ed6e9
 plot(ts, zs, xlabel="Temperature (K)", ylabel="Z")
 
+# ╔═╡ f4264836-ff91-4d89-8d59-8f2d652271f6
+md"""
+Comupte the internal energy
+
+$U(\beta) = \frac{\sum_i \Gamma_i E_i e^{-E_i \beta}}{\sum_i \Gamma_i e^{-E_i \beta}}$
+"""
+
 # ╔═╡ 72329d32-e194-4090-9f41-0950adad6748
 u = [internal_energy(b, gi, ei) for b in beta]
 
 # ╔═╡ 7756264e-7e71-4d12-8a09-baeab1ee4077
 plot(ts, u, xlabel="Temperature (K)", ylabel="Internal energy")
+
+# ╔═╡ 5337631c-2150-4032-85cb-74702d5584ec
+md"""
+Comupte the constant-volume heat capacity:
+
+$C_V(\beta) = \frac{dof \cdot k_B}{2} + k_B \beta^2 \left(\frac{\sum_i \Gamma_i E_i^2 \exp(-E_i \beta)}{Z(\beta)} - U(\beta)^2\right)$
+
+"""
 
 # ╔═╡ 1b7d86b4-9d84-44a6-852f-cceea593b2e9
 cvs = [cv(b, gi, ei, dof) for b in beta]
@@ -265,22 +296,14 @@ md"""
 """
 
 # ╔═╡ 6a11ff64-0ad8-4b57-a8db-06765238bfac
-surf_energies = read_output("08_surf.csv")
-
-# ╔═╡ 77f8c9fd-9634-4921-a3f9-c0aa5bc6520f
-surf_gi = gamma_factors(surf_energies.iter, 640)
-
-# ╔═╡ de6e92b6-d971-4567-b1bf-615f267bd5c8
-surf_ei = surf_energies.emax .- minimum(surf_energies.emax)
-
-# ╔═╡ 26a6ea9f-6d59-452f-a8b8-6cb5fd91b7e1
-surf_ts = 1:2500
-
-# ╔═╡ f2f8953e-15ba-4261-822f-61b048637880
-surf_beta = 1 ./(kb.*surf_ts)
-
-# ╔═╡ df5e0581-bbe3-4522-86e0-7e736a4c3d00
-surf_cvs = [cv(b, surf_gi, surf_ei, 3*8) for b in surf_beta]
+begin
+	surf_energies = read_output("08_surf.csv")
+	surf_gi = gamma_factors(surf_energies.iter, 640)
+	surf_ei = surf_energies.emax .- minimum(surf_energies.emax)
+	surf_ts = 1:2500
+	surf_beta = 1 ./(kb.*surf_ts)
+	surf_cvs = [cv(b, surf_gi, surf_ei, 3*8) for b in surf_beta]
+end
 
 # ╔═╡ 27ff4b7e-a10f-4d2c-accf-cbcd4aa2b24e
 plot(surf_ts, surf_cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
@@ -324,11 +347,14 @@ md"""
 # ╠═f8d5538f-0621-4c11-875d-729af53123da
 # ╠═6999a230-82d1-480d-a0fc-a7bdada6fdb6
 # ╟─354c14c8-df26-460e-bb9b-c3945561d81d
+# ╠═966a5497-2b72-49bf-9b76-20279a795d22
 # ╠═68f4f490-f80a-4269-9000-e43ae269544a
 # ╠═1beb8de4-bf20-44d3-8ff8-19a5dcfa6f94
 # ╠═f2394846-280f-4c1e-9a82-5c78711452d7
 # ╟─48b0f871-293d-44e2-9ffa-12481f187237
+# ╟─3a0c16e9-6e1e-4497-afbe-772d15105d7d
 # ╠═34f93745-4823-4b50-9b1b-7de0df5d7ef3
+# ╟─312afb4b-2b97-48df-8f59-215f10678c68
 # ╠═0eed5c28-2152-4294-877a-008912486b98
 # ╠═7e267448-9bfa-4897-a117-ed75ea5e433e
 # ╠═601be34c-11fd-4693-9098-0eb1e4d8b0c1
@@ -337,17 +363,14 @@ md"""
 # ╠═1aac25a8-37cc-469d-ada4-39a027c7373c
 # ╠═729b7408-e46e-4134-8cf6-9e7735d94840
 # ╠═22169a82-0b5a-4012-8a85-64051e4ed6e9
+# ╟─f4264836-ff91-4d89-8d59-8f2d652271f6
 # ╠═72329d32-e194-4090-9f41-0950adad6748
 # ╠═7756264e-7e71-4d12-8a09-baeab1ee4077
+# ╟─5337631c-2150-4032-85cb-74702d5584ec
 # ╠═1b7d86b4-9d84-44a6-852f-cceea593b2e9
 # ╠═39386f04-3539-4b1f-8dec-612b081ffa46
 # ╟─6071da62-0458-4fa3-8059-f3d337aaced2
 # ╟─0bfc63b6-6dc3-4ca4-85a9-7f2028dcaeb1
 # ╠═6a11ff64-0ad8-4b57-a8db-06765238bfac
-# ╠═77f8c9fd-9634-4921-a3f9-c0aa5bc6520f
-# ╠═de6e92b6-d971-4567-b1bf-615f267bd5c8
-# ╠═26a6ea9f-6d59-452f-a8b8-6cb5fd91b7e1
-# ╠═f2f8953e-15ba-4261-822f-61b048637880
-# ╠═df5e0581-bbe3-4522-86e0-7e736a4c3d00
-# ╠═27ff4b7e-a10f-4d2c-accf-cbcd4aa2b24e
+# ╟─27ff4b7e-a10f-4d2c-accf-cbcd4aa2b24e
 # ╟─5cb4cb4e-1d02-4057-bccd-7e96e0f68d85
