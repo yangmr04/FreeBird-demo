@@ -1,17 +1,19 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
+    #! format: off
     quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ ad6b7485-5af8-4cd3-867a-dc3e53cf9cc0
@@ -307,7 +309,7 @@ plot(surf_ts, surf_cvs, xlabel="Temperature (K)",ylabel="Heat Capacity")
 
 # ╔═╡ Cell order:
 # ╟─ad6b7485-5af8-4cd3-867a-dc3e53cf9cc0
-# ╟─82211f2c-c971-48f8-a7a3-e980da7e53c0
+# ╠═82211f2c-c971-48f8-a7a3-e980da7e53c0
 # ╟─4e860050-5b3a-494a-8ce8-e7b5a3ebedf2
 # ╟─e32b01e1-9c4d-4dd9-85e9-286fd16ed0fa
 # ╟─42a7c952-e8e5-43ff-8247-520d6fad4be8
